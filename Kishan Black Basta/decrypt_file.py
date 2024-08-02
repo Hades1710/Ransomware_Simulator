@@ -33,6 +33,6 @@ def decrypt_file(encrypted_file_path, private_key_path):
 
 if __name__ == "__main__":
     encrypted_file_path = "/home/kishan/Desktop/hello.txt.locked"
-    private_key_path = "private_key.pem"
+    private_key_path = "/home/kishan/Desktop/private_key.pem"
     decrypt_file(encrypted_file_path, private_key_path)
 
