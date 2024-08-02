@@ -39,6 +39,6 @@ def encrypt_file(file_path, public_key_path):
 
 if __name__ == "__main__":
     file_path = "/home/kishan/Desktop/hello.txt"
-    public_key_path = "public_key.pem"
+    public_key_path = "/home/kishan/Desktop/public_key.pem"
     encrypt_file(file_path, public_key_path)
 
