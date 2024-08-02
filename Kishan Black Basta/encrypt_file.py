@@ -38,7 +38,7 @@ def encrypt_file(file_path, public_key_path):
     # os.remove(file_path)
 
 if __name__ == "__main__":
-    file_path = "/home/kishan/Desktop/encrypt_file.py"
+    file_path = "/home/kishan/Desktop/hello.txt"
     public_key_path = "public_key.pem"
     encrypt_file(file_path, public_key_path)
 
