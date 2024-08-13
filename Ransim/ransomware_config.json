@@ -1,0 +1,10 @@
+{
+    "Play": {
+        "encryption_type": ["full", "partial"],
+        "extension": ".play"
+    },
+    "Wannacry": {
+        "encryption_type": ["full"],
+        "extension": ".wannacry"
+    }
+}

@@ -4,14 +4,15 @@ from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 
 # Directory to encrypt
-directory = r"D:\Cyber\Malware\Play"
+directory = r"D:\Cyber\Malware\Ransomware_Simulator\Play"
 
 # Exclusions: Do not encrypt these files
+# DEV : Change the Directory path.
 exclusions = [
-    r"D:\Cyber\Malware\Play\public_key.pem",
-    r"D:\Cyber\Malware\Play\private_key.pem",
-    r"D:\Cyber\Malware\Play\enc.py",
-    r"D:\Cyber\Malware\Play\dec.py"  # Assuming a decryption script exists
+    r"D:\Cyber\Malware\Ransomware_Simulator\Play\public_key.pem",
+    r"D:D:\Cyber\Malware\Ransomware_Simulator\Play\private_key.pem",
+    r"D:D:\Cyber\Malware\Ransomware_Simulator\Play\enc.py",
+    r"D:\Cyber\Malware\Ransomware_Simulator\Play\dec.py" 
 ]
 
 # Function to list all files in a directory, excluding specific files
@@ -76,8 +77,8 @@ def generate_rsa_keys(public_key_path, private_key_path):
         f.write(public_key)
 
 # Paths to save RSA keys
-public_key_path = r"D:\Cyber\Malware\Play\public_key.pem"
-private_key_path = r"D:\Cyber\Malware\Play\private_key.pem"
+public_key_path = r"D:\Cyber\Malware\Ransomware_Simulator\Play\public_key.pem"
+private_key_path = r"D:\Cyber\Malware\Ransomware_Simulator\Play\private_key.pem"
 
 # Generate RSA keys
 generate_rsa_keys(public_key_path, private_key_path)
