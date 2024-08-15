@@ -1,0 +1,122 @@
+{
+    "Play": {
+        "encryption_type": "full",
+        "extension": ".play",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "Black_Beasts_Black_Basta": {
+        "encryption_type": "partial",
+        "extension": ".blackbasta",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "Bianlian": {
+        "encryption_type": "full",
+        "extension": ".bianlian",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES"
+    },
+    "Cerber": {
+        "encryption_type": "full",
+        "extension": ".cerber",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "Conti": {
+        "encryption_type": "full",
+        "extension": ".conti",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "PYSA": {
+        "encryption_type": "full",
+        "extension": ".pysa",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "REVIL": {
+        "encryption_type": "full",
+        "extension": ".revil",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "MAZE": {
+        "encryption_type": "full",
+        "extension": ".maze",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "Lockbit": {
+        "encryption_type": "full",
+        "extension": ".lockbit",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "WANNACRY": {
+        "encryption_type": "full",
+        "extension": ".wannacry",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "Karakurt": {
+        "encryption_type": "full",
+        "extension": ".karakurt",
+        "key_size": "256 bit",
+        "encryption_algorithm": "ChaCha20 + RSA"
+    },
+    "Royal": {
+        "encryption_type": "full",
+        "extension": ".royal",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "Avaddon": {
+        "encryption_type": "full",
+        "extension": ".avaddon",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "Bad_Rabbit": {
+        "encryption_type": "full",
+        "extension": ".badrabbit",
+        "key_size": "2048-bit RSA (for key encryption)",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "Cl0P": {
+        "encryption_type": "full",
+        "extension": ".cl0p",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "HIVE": {
+        "encryption_type": "full",
+        "extension": ".hive",
+        "key_size": "256 bit",
+        "encryption_algorithm": "ChaCha20 + RSA"
+    },
+    "DOPPLEPAYMER": {
+        "encryption_type": "full",
+        "extension": ".dopplepaymer",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "EGREGOR": {
+        "encryption_type": "full",
+        "extension": ".egregor",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "BLACKCAT": {
+        "encryption_type": "full",
+        "extension": ".blackcat",
+        "key_size": "256 bit",
+        "encryption_algorithm": "AES + RSA"
+    },
+    "CRYPTOLOCKER": {
+        "encryption_type": "full",
+        "extension": ".cryptolocker",
+        "key_size": "2048-bit RSA (for key encryption) and 256-bit AES (for file encryption)",
+        "encryption_algorithm": "RSA + AES"
+    }
+}
