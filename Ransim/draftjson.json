@@ -55,7 +55,7 @@
     },
     "WANNACRY": {
         "encryption_type": "full",
-        "extension": ".wannacry",
+        "extension": ".wncry",
         "key_size": "256 bit",
         "encryption_algorithm": "AES + RSA"
     },
