@@ -61,7 +61,7 @@ def scan_for_vulnerable_files(starting_directory):
     return vulnerable_files
 
 # Example usage: Start scanning from the current directory
-starting_directory = '.'  # Change this to any directory you want to start scanning from
+starting_directory = '.' 
 found_vulnerable_files = scan_for_vulnerable_files(starting_directory)
 
 # Output the list of found files
