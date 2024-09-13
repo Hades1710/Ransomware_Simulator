@@ -1,2 +1,1 @@
-# Moser
-Ransomware Simulator
+
