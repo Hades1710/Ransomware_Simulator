@@ -7,7 +7,7 @@ Presents a menu for the user to select which ransomware to simulate
 If zip_type is specified (not "None"), it will create a password-protected archive of the matching files
 If zip_type is "None", it will encrypt the files using the specified encryption method
 # To use this script, you'll need to install the required dependencies:
-#  pip install cryptography py7zr rarfile
+  pip install cryptography py7zr rarfile
 
 # The script will:
 1.Look for files in the specified target directory that match the extensions for the chosen ransomware
